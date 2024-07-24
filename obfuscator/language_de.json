@@ -1,0 +1,10 @@
+{
+    "menu_prompt": "Geben Sie 1 für Obfuskation, 2 für Deobfuskation oder q zum Beenden ein: ",
+    "enter_project_path": "Geben Sie den Pfad zum C#-Projekt ein: ",
+    "enter_obfuscated_path": "Geben Sie den Pfad zum obfuskierten Projekt ein: ",
+    "obfuscating_files": "Dateien werden obfuskiert",
+    "deobfuscating_files": "Dateien werden deobfuskiert",
+    "obfuscation_complete": "Obfuskation abgeschlossen. Ausgabe gespeichert in {}",
+    "deobfuscation_complete": "Deobfuskation abgeschlossen. Ausgabe gespeichert in {}",
+    "invalid_choice": "Ungültige Auswahl. Bitte versuchen Sie es erneut."
+}

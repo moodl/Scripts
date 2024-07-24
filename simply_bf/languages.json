@@ -1,0 +1,38 @@
+{
+    "de": {
+        "ask_combination": "Hast du die Kombination '{}' ausprobiert? (ja/nein): ",
+        "combination_tried": "Die Kombination '{}' wurde bereits ausprobiert.",
+        "interrupt_detected": "Keyboard Interrupt erkannt. Wechsel in den alternativen Modus...",
+        "exit_prompt": "Möchtest du die Anwendung beenden? (ja/nein): ",
+        "exiting": "Beenden der Anwendung...",
+        "total_combinations": "Die Anzahl der möglichen Kombinationen ist: {}",
+        "tried_combinations": "Die Anzahl der bereits ausprobierten Kombinationen ist: {}",
+        "menu_prompt": "\nWähle eine Option:\n1. Alle probierten Kombinationen anzeigen\n2. Alle nicht probierten Kombinationen anzeigen\n3. Fortfahren mit dem Testen von Kombinationen\n4. Beenden\nAuswahl: ",
+        "tried_combinations_header": "Bereits probierte Kombinationen:",
+        "untried_combinations_header": "Nicht probierte Kombinationen:",
+        "testing_combination": "Teste Kombination: {}",
+        "invalid_choice": "Ungültige Auswahl. Bitte wähle eine gültige Option.",
+        "enter_combination": "Gib eine Zeichenfolge ein (oder 'exit' zum Beenden): ",
+        "exit": "exit",
+        "invalid_combination": "Ungültige Zeichenfolge. Bitte gib eine Zeichenfolge mit 4-5 Zeichen ein, wobei kein Zeichen mehr als zweimal vorkommen darf.",
+        "yes": "ja"
+    },
+    "en": {
+        "ask_combination": "Have you tried the combination '{}'? (yes/no): ",
+        "combination_tried": "The combination '{}' has already been tried.",
+        "interrupt_detected": "Keyboard Interrupt detected. Switching to alternative mode...",
+        "exit_prompt": "Do you want to exit the application? (yes/no): ",
+        "exiting": "Exiting the application...",
+        "total_combinations": "The number of possible combinations is: {}",
+        "tried_combinations": "The number of combinations already tried is: {}",
+        "menu_prompt": "\nChoose an option:\n1. Show all tried combinations\n2. Show all untried combinations\n3. Continue testing combinations\n4. Exit\nChoice: ",
+        "tried_combinations_header": "Already tried combinations:",
+        "untried_combinations_header": "Untried combinations:",
+        "testing_combination": "Testing combination: {}",
+        "invalid_choice": "Invalid choice. Please select a valid option.",
+        "enter_combination": "Enter a character sequence (or 'exit' to quit): ",
+        "exit": "exit",
+        "invalid_combination": "Invalid character sequence. Please enter a sequence of 4-5 characters, where no character appears more than twice.",
+        "yes": "yes"
+    }
+}

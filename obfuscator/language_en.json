@@ -1,0 +1,10 @@
+{
+    "menu_prompt": "Enter 1 for obfuscation, 2 for deobfuscation, or q to quit: ",
+    "enter_project_path": "Enter the path to the C# project: ",
+    "enter_obfuscated_path": "Enter the path to the obfuscated project: ",
+    "obfuscating_files": "Obfuscating files",
+    "deobfuscating_files": "Deobfuscating files",
+    "obfuscation_complete": "Obfuscation complete. Output saved to {}",
+    "deobfuscation_complete": "Deobfuscation complete. Output saved to {}",
+    "invalid_choice": "Invalid choice. Please try again."
+}
