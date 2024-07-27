@@ -1,0 +1,325 @@
+Please generate a detailed commit message for the following git diff:
+diff --git a/div/create_playlist.py b/div/create_playlist.py
+index cb2b8a6..8e9a61b 100755
+--- a/div/create_playlist.py
++++ b/div/create_playlist.py
+@@ -60,9 +60,10 @@ def main():
+         print("Please provide a valid directory.")
+         sys.exit(1)
+ 
+-    main_directory = sys.argv[1]
++    # Korrigiere den Ordner-String, indem Anführungszeichen entfernt werden
++    main_directory = sys.argv[1].strip("'\"")
+     if not os.path.isdir(main_directory):
+-        print("Please provide a valid directory.")
++        print(f"The directory '{main_directory}' is not valid.")
+         sys.exit(1)
+ 
+     playlist_name = input("Enter the name of the playlist file (without extension): ")
+diff --git a/shared_utils/run_script.py b/shared_utils/run_script.py
+index 4815a44..045b0be 100644
+--- a/shared_utils/run_script.py
++++ b/shared_utils/run_script.py
+@@ -4,15 +4,20 @@ import venv
+ import subprocess
+ import ast
+ import importlib.util
++import shlex
++import atexit
++import shutil
+ 
+-def create_venv(venv_path):
++VENV_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.hidden_venv')
++
++def create_venv():
+     print("Creating virtual environment...")
+-    venv.create(venv_path, with_pip=True)
++    venv.create(VENV_DIR, with_pip=True)
+ 
+-def get_venv_python(venv_path):
++def get_venv_python():
+     if sys.platform.startswith('win'):
+-        return os.path.join(venv_path, 'Scripts', 'python.exe')
+-    return os.path.join(venv_path, 'bin', 'python')
++        return os.path.join(VENV_DIR, 'Scripts', 'python.exe')
++    return os.path.join(VENV_DIR, 'bin', 'python')
+ 
+ def get_imports(file_path):
+     with open(file_path, 'r') as file:
+@@ -28,25 +33,34 @@ def get_imports(file_path):
+                 imports.add(node.module.split('.')[0])
+     return imports
+ 
+-def is_package_installed(venv_python, package):
++def is_package_installed(package):
++    venv_python = get_venv_python()
+     result = subprocess.run([venv_python, '-c', f'import {package}'], capture_output=True, text=True)
+     return result.returncode == 0
+ 
+-def install_package(venv_python, package):
++def install_package(package):
++    venv_python = get_venv_python()
+     print(f"Installing {package}...")
+     subprocess.check_call([venv_python, '-m', 'pip', 'install', package])
+ 
+-def ensure_packages(venv_python, packages):
++def ensure_packages(packages):
+     for package in packages:
+-        if not is_package_installed(venv_python, package):
+-            install_package(venv_python, package)
++        if not is_package_installed(package):
++            install_package(package)
+ 
+-def run_main_script(venv_python, main_script, args):
++def run_main_script(main_script, args):
++    venv_python = get_venv_python()
+     print(f"Running the main script: {main_script}")
+-    cmd = [venv_python, main_script] + args
+-    subprocess.check_call(cmd)
++    quoted_args = [shlex.quote(arg) for arg in args]
++    cmd = [venv_python, main_script] + quoted_args
++    subprocess.run(cmd, check=True)
+ 
+-if __name__ == "__main__":
++def cleanup_venv():
++    if os.path.exists(VENV_DIR):
++        print("Cleaning up virtual environment...")
++        shutil.rmtree(VENV_DIR)
++
++def main():
+     if len(sys.argv) < 2:
+         print("Usage: python script.py <path_to_python_file>")
+         sys.exit(1)
+@@ -56,15 +70,14 @@ if __name__ == "__main__":
+         print(f"Error: The file {main_script} does not exist.")
+         sys.exit(1)
+ 
+-    script_name = os.path.basename(main_script)
+-    script_dir = os.path.dirname(main_script)
+-    venv_name = f"venv_{os.path.splitext(script_name)[0]}"
+-    venv_path = os.path.join(script_dir, venv_name)
++    # Cleanup any existing venv
++    cleanup_venv()
+ 
+-    if not os.path.exists(venv_path):
+-        create_venv(venv_path)
++    # Create new venv
++    create_venv()
+ 
+-    venv_python = get_venv_python(venv_path)
++    # Register cleanup function
++    atexit.register(cleanup_venv)
+ 
+     # Get imports from the main script
+     imports = get_imports(main_script)
+@@ -74,7 +87,21 @@ if __name__ == "__main__":
+     third_party_imports = imports - stdlib_modules
+ 
+     # Ensure all required packages are installed
+-    ensure_packages(venv_python, third_party_imports)
++    ensure_packages(third_party_imports)
++
++    try:
++        # Run the main script
++        run_main_script(main_script, sys.argv[2:])
++    except subprocess.CalledProcessError as e:
++        print(f"Error running the main script: {e}")
++        sys.exit(e.returncode)
++    except KeyboardInterrupt:
++        print("\nScript interrupted by user.")
++    except Exception as e:
++        print(f"An unexpected error occurred: {e}")
++    finally:
++        # Cleanup will be done by atexit
++        pass
+ 
+-    # Run the main script
+-    run_main_script(venv_python, main_script, sys.argv[2:])
+\ No newline at end of file
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+diff --git a/simply_bf/languages.json b/simply_bf/languages.json
+deleted file mode 100644
+index a7913f1..0000000
+--- a/simply_bf/languages.json
++++ /dev/null
+@@ -1,38 +0,0 @@
+-{
+-    "de": {
+-        "ask_combination": "Hast du die Kombination '{}' ausprobiert? (ja/nein): ",
+-        "combination_tried": "Die Kombination '{}' wurde bereits ausprobiert.",
+-        "interrupt_detected": "Keyboard Interrupt erkannt. Wechsel in den alternativen Modus...",
+-        "exit_prompt": "Möchtest du die Anwendung beenden? (ja/nein): ",
+-        "exiting": "Beenden der Anwendung...",
+-        "total_combinations": "Die Anzahl der möglichen Kombinationen ist: {}",
+-        "tried_combinations": "Die Anzahl der bereits ausprobierten Kombinationen ist: {}",
+-        "menu_prompt": "\nWähle eine Option:\n1. Alle probierten Kombinationen anzeigen\n2. Alle nicht probierten Kombinationen anzeigen\n3. Fortfahren mit dem Testen von Kombinationen\n4. Beenden\nAuswahl: ",
+-        "tried_combinations_header": "Bereits probierte Kombinationen:",
+-        "untried_combinations_header": "Nicht probierte Kombinationen:",
+-        "testing_combination": "Teste Kombination: {}",
+-        "invalid_choice": "Ungültige Auswahl. Bitte wähle eine gültige Option.",
+-        "enter_combination": "Gib eine Zeichenfolge ein (oder 'exit' zum Beenden): ",
+-        "exit": "exit",
+-        "invalid_combination": "Ungültige Zeichenfolge. Bitte gib eine Zeichenfolge mit 4-5 Zeichen ein, wobei kein Zeichen mehr als zweimal vorkommen darf.",
+-        "yes": "ja"
+-    },
+-    "en": {
+-        "ask_combination": "Have you tried the combination '{}'? (yes/no): ",
+-        "combination_tried": "The combination '{}' has already been tried.",
+-        "interrupt_detected": "Keyboard Interrupt detected. Switching to alternative mode...",
+-        "exit_prompt": "Do you want to exit the application? (yes/no): ",
+-        "exiting": "Exiting the application...",
+-        "total_combinations": "The number of possible combinations is: {}",
+-        "tried_combinations": "The number of combinations already tried is: {}",
+-        "menu_prompt": "\nChoose an option:\n1. Show all tried combinations\n2. Show all untried combinations\n3. Continue testing combinations\n4. Exit\nChoice: ",
+-        "tried_combinations_header": "Already tried combinations:",
+-        "untried_combinations_header": "Untried combinations:",
+-        "testing_combination": "Testing combination: {}",
+-        "invalid_choice": "Invalid choice. Please select a valid option.",
+-        "enter_combination": "Enter a character sequence (or 'exit' to quit): ",
+-        "exit": "exit",
+-        "invalid_combination": "Invalid character sequence. Please enter a sequence of 4-5 characters, where no character appears more than twice.",
+-        "yes": "yes"
+-    }
+-}
+\ No newline at end of file
+diff --git a/simply_bf/simple_bf.py b/simply_bf/simple_bf.py
+deleted file mode 100644
+index 7dee8b7..0000000
+--- a/simply_bf/simple_bf.py
++++ /dev/null
+@@ -1,132 +0,0 @@
+-import json
+-import itertools
+-import signal
+-import sys
+-import argparse
+-
+-# Load language strings from JSON
+-def load_language(lang_file='languages.json'):
+-    with open(lang_file, 'r', encoding='utf-8') as file:
+-        return json.load(file)
+-
+-# Global variables
+-lang = {}
+-tried_combinations = {}
+-current_combination = ''
+-interruption_count = 0
+-
+-# Ergonomic score calculation
+-def ergonomic_score(combination):
+-    easy_pairs = [tuple(pair) for pair in itertools.permutations(characters, 2)]
+-    score = sum(1 for i in range(len(combination) - 1) if (combination[i], combination[i + 1]) in easy_pairs)
+-    return score
+-
+-# Pattern score calculation
+-def pattern_score(combination):
+-    common_patterns = [''.join(pattern) for pattern in itertools.permutations(characters, 2)]
+-    score = sum(1 for pattern in common_patterns if pattern in combination)
+-    return score
+-
+-def is_psychologically_likely(combination):
+-    if any(combination.count(c) > 2 for c in combination):
+-        return False
+-    if ergonomic_score(combination) < 1 or pattern_score(combination) < 1:
+-        return False
+-    return True
+-
+-def generate_combinations():
+-    valid_combinations = set()
+-    for length in range(4, 6):
+-        for comb in itertools.permutations(characters, length):
+-            comb_str = ''.join(comb)
+-            if is_psychologically_likely(comb_str):
+-                valid_combinations.add(comb_str)
+-    return sorted(valid_combinations, key=lambda x: (ergonomic_score(x) + pattern_score(x)), reverse=True)
+-
+-def load_tried_combinations(filename='tried_combinations.json'):
+-    try:
+-        with open(filename, 'r') as file:
+-            return json.load(file)
+-    except FileNotFoundError:
+-        return {}
+-
+-def save_tried_combinations(filename='tried_combinations.json'):
+-    with open(filename, 'w') as file:
+-        json.dump(tried_combinations, file, indent=4)
+-
+-def ask_and_save_combination(comb):
+-    if comb not in tried_combinations:
+-        response = input(lang['ask_combination'].format(comb)).strip().lower()
+-        tried_combinations[comb] = response == lang['yes']
+-        save_tried_combinations()
+-    else:
+-        print(lang['combination_tried'].format(comb))
+-
+-def signal_handler(sig, frame):
+-    global interruption_count
+-    interruption_count += 1
+-    if interruption_count == 1:
+-        print(f"\n{lang['interrupt_detected']}")
+-        alternative_mode()
+-    elif interruption_count == 2:
+-        response = input(f"\n{lang['exit_prompt']}").strip().lower()
+-        if response == lang['yes']:
+-            print(lang['exiting'])
+-            sys.exit(0)
+-        else:
+-            interruption_count = 0
+-
+-def main():
+-    global tried_combinations, current_combination, interruption_count
+-    interruption_count = 0
+-    signal.signal(signal.SIGINT, signal_handler)
+-    
+-    tried_combinations = load_tried_combinations()
+-    all_combinations = generate_combinations()
+-
+-    tried_count = sum(1 for comb in all_combinations if comb in tried_combinations)
+-    print(lang['total_combinations'].format(len(all_combinations)))
+-    print(lang['tried_combinations'].format(tried_count))
+-
+-    while True:
+-        choice = input(lang['menu_prompt']).strip()
+-        if choice == "1":
+-            print(f"\n{lang['tried_combinations_header']}")
+-            for comb in tried_combinations:
+-                print(comb)
+-        elif choice == "2":
+-            print(f"\n{lang['untried_combinations_header']}")
+-            for comb in all_combinations:
+-                if comb not in tried_combinations:
+-                    print(comb)
+-        elif choice == "3":
+-            for comb in all_combinations:
+-                if comb not in tried_combinations:
+-                    current_combination = comb
+-                    print(lang['testing_combination'].format(comb))
+-                    ask_and_save_combination(comb)
+-        elif choice == "4":
+-            break
+-        else:
+-            print(lang['invalid_choice'])
+-
+-def alternative_mode():
+-    while True:
+-        comb = input(lang['enter_combination']).strip()
+-        if comb.lower() == lang['exit']:
+-            break
+-        if 4 <= len(comb) <= 5 and all(comb.count(c) <= 2 for c in comb):
+-            ask_and_save_combination(comb)
+-        else:
+-            print(lang['invalid_combination'])
+-
+-if __name__ == "__main__":
+-    parser = argparse.ArgumentParser(description='Combination testing script')
+-    parser.add_argument('--chars', type=str, default='', help='Characters to use for combinations')
+-    parser.add_argument('--lang', type=str, default='de', choices=['de', 'en'], help='Language to use (de or en)')
+-    args = parser.parse_args()
+-
+-    characters = list(args.chars)
+-    lang = load_language()[args.lang]
+-
+-    main()
+\ No newline at end of file

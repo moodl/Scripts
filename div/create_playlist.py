@@ -60,9 +60,10 @@ def main():
         print("Please provide a valid directory.")
         sys.exit(1)
 
-    main_directory = sys.argv[1]
+    # Korrigiere den Ordner-String, indem Anführungszeichen entfernt werden
+    main_directory = sys.argv[1].strip("'\"")
     if not os.path.isdir(main_directory):
-        print("Please provide a valid directory.")
+        print(f"The directory '{main_directory}' is not valid.")
         sys.exit(1)
 
     playlist_name = input("Enter the name of the playlist file (without extension): ")

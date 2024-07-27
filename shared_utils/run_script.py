@@ -4,15 +4,20 @@ import venv
 import subprocess
 import ast
 import importlib.util
+import shlex
+import atexit
+import shutil
 
-def create_venv(venv_path):
+VENV_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.hidden_venv')
+
+def create_venv():
     print("Creating virtual environment...")
-    venv.create(venv_path, with_pip=True)
+    venv.create(VENV_DIR, with_pip=True)
 
-def get_venv_python(venv_path):
+def get_venv_python():
     if sys.platform.startswith('win'):
-        return os.path.join(venv_path, 'Scripts', 'python.exe')
-    return os.path.join(venv_path, 'bin', 'python')
+        return os.path.join(VENV_DIR, 'Scripts', 'python.exe')
+    return os.path.join(VENV_DIR, 'bin', 'python')
 
 def get_imports(file_path):
     with open(file_path, 'r') as file:
@@ -28,25 +33,34 @@ def get_imports(file_path):
                 imports.add(node.module.split('.')[0])
     return imports
 
-def is_package_installed(venv_python, package):
+def is_package_installed(package):
+    venv_python = get_venv_python()
     result = subprocess.run([venv_python, '-c', f'import {package}'], capture_output=True, text=True)
     return result.returncode == 0
 
-def install_package(venv_python, package):
+def install_package(package):
+    venv_python = get_venv_python()
     print(f"Installing {package}...")
     subprocess.check_call([venv_python, '-m', 'pip', 'install', package])
 
-def ensure_packages(venv_python, packages):
+def ensure_packages(packages):
     for package in packages:
-        if not is_package_installed(venv_python, package):
-            install_package(venv_python, package)
+        if not is_package_installed(package):
+            install_package(package)
 
-def run_main_script(venv_python, main_script, args):
+def run_main_script(main_script, args):
+    venv_python = get_venv_python()
     print(f"Running the main script: {main_script}")
-    cmd = [venv_python, main_script] + args
-    subprocess.check_call(cmd)
+    quoted_args = [shlex.quote(arg) for arg in args]
+    cmd = [venv_python, main_script] + quoted_args
+    subprocess.run(cmd, check=True)
 
-if __name__ == "__main__":
+def cleanup_venv():
+    if os.path.exists(VENV_DIR):
+        print("Cleaning up virtual environment...")
+        shutil.rmtree(VENV_DIR)
+
+def main():
     if len(sys.argv) < 2:
         print("Usage: python script.py <path_to_python_file>")
         sys.exit(1)
@@ -56,15 +70,14 @@ if __name__ == "__main__":
         print(f"Error: The file {main_script} does not exist.")
         sys.exit(1)
 
-    script_name = os.path.basename(main_script)
-    script_dir = os.path.dirname(main_script)
-    venv_name = f"venv_{os.path.splitext(script_name)[0]}"
-    venv_path = os.path.join(script_dir, venv_name)
+    # Cleanup any existing venv
+    cleanup_venv()
 
-    if not os.path.exists(venv_path):
-        create_venv(venv_path)
+    # Create new venv
+    create_venv()
 
-    venv_python = get_venv_python(venv_path)
+    # Register cleanup function
+    atexit.register(cleanup_venv)
 
     # Get imports from the main script
     imports = get_imports(main_script)
@@ -74,7 +87,21 @@ if __name__ == "__main__":
     third_party_imports = imports - stdlib_modules
 
     # Ensure all required packages are installed
-    ensure_packages(venv_python, third_party_imports)
+    ensure_packages(third_party_imports)
 
-    # Run the main script
-    run_main_script(venv_python, main_script, sys.argv[2:])
+    try:
+        # Run the main script
+        run_main_script(main_script, sys.argv[2:])
+    except subprocess.CalledProcessError as e:
+        print(f"Error running the main script: {e}")
+        sys.exit(e.returncode)
+    except KeyboardInterrupt:
+        print("\nScript interrupted by user.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    finally:
+        # Cleanup will be done by atexit
+        pass
+
+if __name__ == "__main__":
+    main()
