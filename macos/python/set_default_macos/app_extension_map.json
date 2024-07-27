@@ -1,0 +1,21 @@
+{
+    "VLC.app": [
+            "mp3",
+            "wav",
+            "flac",
+            "m4a",
+            "aac",
+            "ogg",
+            "wma",
+            "mp4",
+            "mkv",
+            "avi",
+            "mov",
+            "wmv",
+            "flv",
+            "mpeg",
+            "mpg",
+            "3gp",
+            "webm"
+            ]
+}
